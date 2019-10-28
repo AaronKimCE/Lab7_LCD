@@ -8,10 +8,10 @@
  *	code, is my own original work.
  */
 #include <avr/io.h>
+#include "io.h"
 #include <avr/interrupt.h>
 #ifdef _SIMULATE_
 #include "simAVRHeader.h"
-#include "io.h"
 #endif
 
 enum Cnt_States{Wait, Press_1, Press_2, Reset, Held_1, Held_2} Cnt_State; //Enumerating States
@@ -78,7 +78,7 @@ void TickFct_Cnt() {
       case Press_1: //B1 is pressed
         if (B1 && !B2) {
           Cnt_State = Held_1;
-		  count = 0;
+	  count = 0;
         } else if (B1 && B2) {
           Cnt_State = Reset;
         } else {
@@ -88,7 +88,7 @@ void TickFct_Cnt() {
       case Press_2: //B2 is pressed
         if (!B1 && B2) {
           Cnt_State = Held_2;
-		  count = 0;
+	  count = 0;
         } else if (B1 && B2) {
           Cnt_State = Reset;
         } else {
@@ -101,33 +101,36 @@ void TickFct_Cnt() {
         } else {
           Cnt_State = Wait;
         }
+        break;
       case Held_1:
-	    if ((B1 && !B2) && count < sec1) {
-			Cnt_State = Held_1;
-		} else if ((B1 && !B2) && count >= sec1) {
-			Cnt_State = Press_1;
-			count = 0;
-		} else if (B1 && B2) {
-			Cnt_State = Reset;
-			count = 0;
-		} else {
-			Cnt_State = Wait;
-			count = 0;
-		}
+	if ((B1 && !B2) && count < sec1) {
+	  Cnt_State = Held_1;
+	} else if ((B1 && !B2) && count >= sec1) {
+	  Cnt_State = Press_1;
+	  count = 0;
+	} else if (B1 && B2) {
+	  Cnt_State = Reset;
+	  count = 0;
+	} else {
+	  Cnt_State = Wait;
+	  count = 0;
+	}
+        break;
       case Held_2:
-      if ((!B1 && B2) && count < sec1) {
-	      Cnt_State = Held_2;
-	      } else if ((!B1 && B2) && count >= sec1) {
-	      Cnt_State = Press_2;
-	      count = 0;
-	      } else if (B1 && B2) {
-	      Cnt_State = Reset;
-	      count = 0;
-	      } else {
-	      Cnt_State = Wait;
-	      count = 0;
-      }	
-	
+        if ((!B1 && B2) && count < sec1) {
+          Cnt_State = Held_2;
+        } else if ((!B1 && B2) && count >= sec1) {
+          Cnt_State = Press_2;
+    	  count = 0;
+        } else if (B1 && B2) {
+	  Cnt_State = Reset;
+	  count = 0;
+        } else {
+          Cnt_State = Wait;
+	  count = 0;
+        }	
+        break;
+
     }
 
     switch(Cnt_State) { //State actions
@@ -158,17 +161,19 @@ void TickFct_Cnt() {
 int main(void) {
     DDRA = 0x00; PORTA = 0xFF; //PORT A = inputs
     DDRC = 0xFF; PORTC = 0x00; //PORT C = outputs (LCD)
-	DDRB = 0xFF; PORTD = 0x00; //PORT D = outputs (LCD)
+    DDRD = 0xFF; PORTD = 0x00; //PORT D = outputs (LCD)
     Cnt_State = Wait; //Setting initial state
+    LCD_init();
     Output = 0;
     TimerSet(10);
-	TimerOn();
+    TimerOn();
 	
     while (1) {
       TickFct_Cnt(); //Repeating state logic 
-      LCD_WriteData(Output + '0');//Updating LCD output
-	  while (!TimerFlag);
-	  TimerFlag = 0;
+//      LCD_WriteData(Output + '0');//Updating LCD output
+      LCD_DisplayString(1, "Hello World");
+      while (!TimerFlag);
+      TimerFlag = 0;
     }
     return 1;
 }
